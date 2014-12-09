@@ -14,7 +14,7 @@ dependencies = {
     "halo >= 1.1.0",
     "util >= 1.2.0",
     "blake2 >= 1.0.0",
-    "cookie >= 1.1.0",
+    "cookie >= 1.1.1",
     "process >= 1.0.0"
 }
 build = {
