@@ -102,6 +102,8 @@ function Session:init( cfg )
             t = type( v );
             if t ~= type( cfg.cookie[k] ) then
                 return nil, ('cfg.cookie.%s must be %s'):format( k, t );
+            elseif t == 'string' and #cfg.cookie[k] < 1 then
+                return nil, ('cfg.cookie.%s must be non-empty string'):format( k );
             end
             own.cookie[k] = cfg.cookie[k];
         else
