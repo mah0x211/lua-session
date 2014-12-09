@@ -50,3 +50,14 @@ ifNotEqual( proxy.hello, savedItemProxy.hello );
 sleep( ttl + 1 );
 ifNotNil( s:fetch( sid ) );
 
+-- save item and gen cookie
+cookie = ifNil( item:save() );
+-- extract session id
+sid = cookie:match('sid=([^; ]+)');
+-- fetch item 
+savedItem = ifNil( s:fetch( sid ) );
+-- destroy feched item
+cookie = ifNil( savedItem:destroy() );
+-- session value must be empty
+ifNotNil( cookie:match('sid=([^; ]+)') );
+
