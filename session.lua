@@ -82,9 +82,11 @@ function Session:init( cfg )
     own.idgen = cfg.idgen or DEFAULT_IDGEN;
     if not typeof.Function( own.idgen ) then
         return nil, 'cfg.idgen must be function';
+    end
     -- check generated value
-    elseif not typeof.string( own.idgen() ) then
-        return nil, 'cfg.idgen() must return string value';
+    _ = own.idgen();
+    if not typeof.string( _ ) or #_ < 1 then
+        return nil, 'cfg.idgen() must return non-empty string value';
     end
     
     -- check cfg.cookie
