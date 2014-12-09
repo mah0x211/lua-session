@@ -12,9 +12,26 @@ local item, proxy, cookie, sid, savedItem, savedItemProxy;
 item = ifNil( s:create() );
 -- create data proxy
 proxy = ifNil( item:proxy() );
+
 -- set data
-proxy.numval = math.random();
-proxy.hello = 'world';
+local function sandbox( k, v )
+    local co = coroutine.create(function()
+        proxy[k] = v;
+        return true;
+    end);
+    return coroutine.resume( co );
+end
+-- field-name: string
+-- field-value: string or finite number or nil
+ifTrue( sandbox() );
+ifTrue( sandbox( 1, nil ) );
+ifTrue( sandbox( 'field', function()end ) );
+ifTrue( sandbox( 'field', 0/0 ) );
+ifTrue( sandbox( 'field', 1/0 ) );
+ifNotTrue( sandbox( 'field', nil ) );
+ifNotTrue( sandbox( 'numval', math.random() ) );
+ifNotTrue( sandbox( 'hello', 'world' ) );
+
 -- save item and gen cookie
 cookie = ifNil( item:save() );
 
