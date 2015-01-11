@@ -13,24 +13,32 @@ item = ifNil( s:create() );
 -- create data proxy
 proxy = ifNil( item:proxy() );
 
--- set data
-local function sandbox( k, v )
-    local co = coroutine.create(function()
-        proxy[k] = v;
-        return true;
-    end);
-    return coroutine.resume( co );
-end
 -- field-name: string
 -- field-value: string or finite number or nil
-ifTrue( sandbox() );
-ifTrue( sandbox( 1, nil ) );
-ifTrue( sandbox( 'field', function()end ) );
-ifTrue( sandbox( 'field', 0/0 ) );
-ifTrue( sandbox( 'field', 1/0 ) );
-ifNotTrue( sandbox( 'field', nil ) );
-ifNotTrue( sandbox( 'numval', math.random() ) );
-ifNotTrue( sandbox( 'hello', 'world' ) );
+ifTrue(isolate(function()
+    proxy[nil] = nil;
+end));
+ifTrue(isolate(function()
+    proxy[1] = nil;
+end));
+ifTrue(isolate(function()
+    proxy['field'] = function()end;
+end));
+ifTrue(isolate(function()
+    proxy['field'] = 0/0;
+end));
+ifTrue(isolate(function()
+    proxy['field'] = 1/0;
+end));
+ifNotTrue(isolate(function()
+    proxy['field'] = nil;
+end));
+ifNotTrue(isolate(function()
+    proxy['numval'] = math.random();
+end));
+ifNotTrue(isolate(function()
+    proxy['hello'] = 'world';
+end));
 
 -- save item and gen cookie
 cookie = ifNil( item:save() );
