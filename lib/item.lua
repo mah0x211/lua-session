@@ -70,41 +70,51 @@ function Item:proxy()
 end
 
 
-function Item:save()
+function Item:save( genCookie )
     local own = protected( self );
-    -- create cookie
-    local cookie, err = Cookie.bake( own.cookie.name, own.sid, own.cookie );
-    local ok;
+    local sid, ok, err;
     
-    if err then
-        return nil, err;
+    -- generate cookie: default true
+    if genCookie ~= false then
+        sid, err = Cookie.bake( own.cookie.name, own.sid, own.cookie );
+        if err then
+            return nil, err;
+        end
+    else
+        sid = own.sid;
     end
+    
     -- save data
     ok, err = own.store:set( own.sid, own.data, own.ttl );
     if err then
         return nil, err;
     end
     
-    return cookie;
+    return sid;
 end
 
 
-function Item:destroy()
+function Item:destroy( genCookie )
     local own = protected( self );
-    -- create null data cookie
-    local cookie, err = Cookie.bake( own.cookie.name, '', own.cookie );
-    local ok;
+    local sid, ok, err;
     
-    if err then
-        return nil, err;
+    -- generate null data cookie: default true
+    if genCookie ~= false then
+        sid = Cookie.bake( own.cookie.name, '', own.cookie );
+        if err then
+            return nil, err;
+        end
+    else
+        sid = own.sid;
     end
+    
     -- delete data
     ok, err = own.store:delete( own.sid );
     if err then
         return nil, err;
     end
     
-    return cookie;
+    return sid;
 end
 
 
