@@ -11,11 +11,11 @@ description = {
 }
 dependencies = {
     "lua >= 5.1",
-    "halo >= 1.1.0",
-    "util >= 1.2.0",
     "blake2 >= 1.0.0",
-    "cookie >= 1.1.1",
-    "process >= 1.0.0"
+    "cookie >= 1.1.2",
+    "halo >= 1.1.0",
+    "process >= 1.4.0",
+    "util >= 1.3.2"
 }
 build = {
     type = "builtin",
