@@ -189,13 +189,13 @@ print( tbl.numfield ); -- 10
 
 ### Save and Destroy
 
-#### cookie, err = item:save( [genCookie:boolean] )
+#### sid, err = item:save( [genCookie:boolean] )
 
 save item to the session store and return a cookie or session-id.
 
 ```lua
-local cookie, err = item:save();
-print( cookie );
+local sid, err = item:save();
+print( sid );
 ```
 
 **Parameters**
@@ -208,13 +208,13 @@ print( cookie );
 2. `err`: string - error string.
 
 
-#### cookie, err = item:destroy( [genCookie:boolean] )
+#### sid, err = item:destroy( [genCookie:boolean] )
 
 destroy item from the session store and return a cookie or session-id.
 
 ```lua
-local cookie, err = item:destroy();
-print(  cookie );
+local sid, err = item:destroy();
+print( sid );
 ```
 
 **Parameters**
