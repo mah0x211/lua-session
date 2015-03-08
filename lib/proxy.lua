@@ -29,6 +29,7 @@
 
 -- module
 local typeof = require('util.typeof');
+local cloneSafe = require('util.table').cloneSafe;
 
 -- class
 local Proxy = require('halo').class.Proxy;
@@ -42,11 +43,19 @@ end
 function Proxy:__newindex( prop, val )
     if not typeof.string( prop ) then
         error( 'session field-name must be string', 2 );
-    elseif val ~= nil and not typeof.string( val ) and 
-           not typeof.finite( val ) then
-        error( 'session value must be string, finite number or nil', 2 );
+    elseif val == nil then
+        protected( self ).data[prop] = nil;
+    else
+        local cval = cloneSafe( val );
+        
+        if cval == nil then
+            error(
+                ('cannot save %s value into session'):format( type( val ) ),
+                2
+            );
+        end
+        protected( self ).data[prop] = cval;
     end
-    protected( self ).data[prop] = val;
 end
 
 
