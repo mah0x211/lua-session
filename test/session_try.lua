@@ -22,12 +22,27 @@ ifTrue(isolate(function()
     proxy[1] = nil;
 end));
 ifTrue(isolate(function()
+    proxy[function()end] = nil;
+end));
+ifTrue(isolate(function()
+    proxy[coroutine.create(function()end)] = nil;
+end));
+ifTrue(isolate(function()
+    proxy[{}] = nil;
+end));
+ifTrue(isolate(function()
     proxy['field'] = function()end;
 end));
 ifTrue(isolate(function()
+    proxy['field'] = coroutine.create(function()end);
+end));
+ifNotTrue(isolate(function()
+    proxy['field'] = { a = 'b' };
+end));
+ifNotTrue(isolate(function()
     proxy['field'] = 0/0;
 end));
-ifTrue(isolate(function()
+ifNotTrue(isolate(function()
     proxy['field'] = 1/0;
 end));
 ifNotTrue(isolate(function()
