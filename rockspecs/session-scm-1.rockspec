@@ -15,7 +15,7 @@ dependencies = {
     "cookie >= 1.1.3",
     "halo >= 1.1.0",
     "process >= 1.4.0",
-    "util >= 1.3.2"
+    "util >= 1.4.1"
 }
 build = {
     type = "builtin",
