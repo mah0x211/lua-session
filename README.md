@@ -184,7 +184,8 @@ print( tbl.numfield ); -- 10
 **Proxy table limitation.**
 
 - field name must be `string`.
-- field value must be `nil`, `string` or `finite number`.
+- field value must be `nil`, `string`, `number` or `table`.   
+  **NOTE**: a `table` value will be copied by `util.table.cloneSafe` automatically. if the table key or value or both is not cloneable value, that field will be ignored.
 
 
 ### Save and Destroy
