@@ -11,7 +11,7 @@ description = {
 }
 dependencies = {
     "lua >= 5.1",
-    "blake2 >= 1.0.0",
+    "siphash >= 1.0.0",
     "cookie >= 1.1.3",
     "halo >= 1.1.0",
     "process >= 1.4.0",

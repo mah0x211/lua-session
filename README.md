@@ -7,10 +7,10 @@ session module.
 
 ## Dependencies
 
-- blake2: https://github.com/mah0x211/lua-blake2
 - cookie: https://github.com/mah0x211/lua-cookie
 - halo: https://github.com/mah0x211/lua-halo
 - process: https://github.com/mah0x211/lua-process
+- siphash: https://github.com/mah0x211/lua-siphash
 - util: https://github.com/mah0x211/lua-util
 
 
@@ -40,7 +40,7 @@ local sess, err = Session.new({
 
 - `store`: table - session strore.
 - `ttl`: uint - cookie expiration seconds. `default: 0` that `no expires`.
-- `idgen`: function - session-id generator function. `default: blake2b`.  
+- `idgen`: function - session-id generator function. `default: siphash48`.  
   e.g. `function() return math.random() end`
 
 - `cookie`: table - cookie configuration.

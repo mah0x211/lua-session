@@ -29,7 +29,7 @@
 
 -- module
 local Cookie = require('cookie');
-local blake2b = require('blake2').b;
+local siphash48 = require('siphash').encode48;
 local gettimeofday = require('process').gettimeofday;
 local typeof = require('util.typeof');
 local Proxy = require('session.proxy');
@@ -49,7 +49,7 @@ math.randomseed( gettimeofday() );
 
 -- private
 local function DEFAULT_IDGEN()
-    return blake2b( gettimeofday(), tostring( random() ) );
+    return siphash48( gettimeofday(), tostring( random() ):sub( 1, 16 ) );
 end
 
 
