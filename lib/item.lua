@@ -40,7 +40,6 @@ function Item:init( cfg, sid )
     local data, err;
     
     if sid == nil then
-        sid = cfg.idgen();
         data = {};
     else
         data, err = cfg.store:get( sid );
@@ -70,9 +69,18 @@ function Item:proxy()
 end
 
 
-function Item:save( genCookie )
+function Item:save( genCookie, regenId )
     local own = protected( self );
-    local sid, ok, err;
+    local oldsid, sid, ok, err;
+    
+    -- regenerate session id: default true
+    if regenId ~= false then
+        oldsid = own.sid;
+        own.sid = own.idgen();
+    -- generate session id if nil
+    elseif own.sid == nil then
+        own.sid = own.idgen();
+    end
     
     -- generate cookie: default true
     if genCookie ~= false then
@@ -87,7 +95,15 @@ function Item:save( genCookie )
     -- save data
     ok, err = own.store:set( own.sid, own.data, own.ttl );
     if err then
+        own.sid = oldsid or own.sid;
         return nil, err;
+    -- delete old session
+    elseif oldsid then
+        ok, err = own.store:delete( oldsid );
+        if err then
+            own.sid = oldsid;
+            return nil, err;
+        end
     end
     
     return sid;
@@ -109,9 +125,11 @@ function Item:destroy( genCookie )
     end
     
     -- delete data
-    ok, err = own.store:delete( own.sid );
-    if err then
-        return nil, err;
+    if own.sid then
+        ok, err = own.store:delete( own.sid );
+        if err then
+            return nil, err;
+        end
     end
     
     return sid;
