@@ -190,7 +190,7 @@ print( tbl.numfield ); -- 10
 
 ### Save and Destroy
 
-#### sid, err = item:save( [genCookie:boolean] )
+#### sid, err = item:save( [genCookie:boolean [, regenId:boolean] )
 
 save item to the session store and return a cookie or session-id.
 
@@ -202,10 +202,12 @@ print( sid );
 **Parameters**
 
 1. `genCookie`: boolean - generate cookie. `default: true`.
+2. `regenId`: boolean - regenerate session id. `default: true`.
+
 
 **Returns**
 
-1. `sid`: string - cookie value, or a session-id if a genCookie argument is false.
+1. `sid`: string - cookie value, or a session-id if a `genCookie` argument is false.
 2. `err`: string - error string.
 
 
