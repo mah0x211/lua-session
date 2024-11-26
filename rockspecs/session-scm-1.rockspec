@@ -11,12 +11,16 @@ description = {
 }
 dependencies = {
     "lua >= 5.1",
+    "error >= 0.14.0",
     "lauxhlib >= 0.6.1",
+    "string-random >= 0.2.0",
+    "time-clock >= 0.4.1",
 }
 build = {
     type = "builtin",
     modules = {
         ["session.base32"] = "lib/base32.lua",
+        ["session.idgen"] = "lib/idgen.lua",
     },
 }
 
