@@ -1,0 +1,6 @@
+codefromstrings = false
+runreport = true
+deletestats = true
+modules = {
+    ["session.base32"] = "lib/base32.lua",
+}
