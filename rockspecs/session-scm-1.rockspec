@@ -11,6 +11,7 @@ description = {
 }
 dependencies = {
     "lua >= 5.1",
+    "cookie >= 1.3.1",
     "error >= 0.14.0",
     "lauxhlib >= 0.6.1",
     "string-random >= 0.2.0",
@@ -20,6 +21,7 @@ build = {
     type = "builtin",
     modules = {
         ["session.base32"] = "lib/base32.lua",
+        ["session.cookie"] = "lib/cookie.lua",
         ["session.idgen"] = "lib/idgen.lua",
     },
 }
