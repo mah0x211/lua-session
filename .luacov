@@ -1,0 +1,9 @@
+codefromstrings = false
+runreport = true
+deletestats = true
+modules = {
+    ["session"] = "session.lua",
+    ["session.base32"] = "lib/base32.lua",
+    ["session.cookie"] = "lib/cookie.lua",
+    ["session.idgen"] = "lib/idgen.lua",
+}

@@ -1,28 +1,31 @@
 package = "session"
 version = "scm-1"
 source = {
-    url = "git://github.com/mah0x211/lua-session.git"
+    url = "git+https://github.com/mah0x211/lua-session.git",
 }
 description = {
     summary = "session module.",
-    homepage = "https://github.com/mah0x211/lua-session", 
+    homepage = "https://github.com/mah0x211/lua-session",
     license = "MIT/X11",
-    maintainer = "Masatoshi Teruya"
+    maintainer = "Masatoshi Fukunaga",
 }
 dependencies = {
     "lua >= 5.1",
-    "siphash >= 1.0.0",
-    "cookie >= 1.1.3",
-    "halo >= 1.1.2",
-    "process >= 1.4.0",
-    "util >= 1.4.1"
+    "cache >= 1.3.1",
+    "cookie >= 1.3.1",
+    "error >= 0.14.0",
+    "lauxhlib >= 0.6.1",
+    "metamodule >= 0.5.0",
+    "string-random >= 0.2.0",
+    "time-clock >= 0.4.1",
 }
 build = {
     type = "builtin",
     modules = {
-        session = "session.lua",
-        ["session.item"] = "lib/item.lua",
-        ["session.proxy"] = "lib/proxy.lua"
-    }
+        ["session"] = "session.lua",
+        ["session.base32"] = "lib/base32.lua",
+        ["session.cookie"] = "lib/cookie.lua",
+        ["session.idgen"] = "lib/idgen.lua",
+    },
 }
 
