@@ -60,6 +60,21 @@ function testcase.set_get()
     assert.is_true(ok)
     assert.is_nil(s:get('foo'))
 
+    -- test that return error if value contains circular reference
+    local data = {
+        foo = {
+            bar = {
+                'baz',
+            },
+        },
+    }
+    data.foo.baz = {
+        data = data,
+    }
+    ok, err = s:set('circular', data)
+    assert.match(err, 'cannot clone circular reference at "foo.baz.data"')
+    assert.is_false(ok)
+
     -- test that return error if value is not cloneable
     ok, err = s:set('hello', function()
     end)
