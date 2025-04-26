@@ -26,6 +26,7 @@ local pcall = pcall
 local select = select
 local type = type
 local unpack = unpack or table.unpack
+local concat = table.concat
 local is_str = require('lauxhlib.is').str
 local is_table = require('lauxhlib.is').table
 local is_uint = require('lauxhlib.is').uint
@@ -88,14 +89,36 @@ local VALID_VALUE_TYPES = {
 --- clone_table returns a new table that contains only safe values.
 --- @param tbl table
 --- @return table copies
-local function clone_table(tbl)
+--- @return any err
+local function clone_table(tbl, ref)
+    if type(ref) ~= 'table' then
+        ref = {}
+    end
+
     local ctbl = {}
     for k, v in pairs(tbl) do
         -- ignore non-string and non-unsigned integer keys
         if is_str(k) or is_uint(k) then
             local t = type(v)
             if t == 'table' then
-                ctbl[k] = clone_table(v)
+                if ref[v] then
+                    return nil, errorf('cannot clone circular reference at %q',
+                                       concat(ref, '.'))
+                end
+                local tail = #ref + 1
+                local err
+
+                -- keep reference and key
+                ref[v] = true
+                ref[tail] = k
+                ctbl[k], err = clone_table(v, ref)
+                -- release reference and key
+                ref[v] = nil
+                ref[tail] = nil
+
+                if err then
+                    return nil, err
+                end
             elseif VALID_VALUE_TYPES[t] then
                 ctbl[k] = v
             end
@@ -107,6 +130,7 @@ end
 --- clone returns a cloned value if the argument is a safe value.
 --- @param v table
 --- @return any cloned_value
+--- @return any err
 local function clone(v)
     local t = type(v)
     if t == 'table' then
@@ -133,9 +157,10 @@ function Session:set(key, val)
         return true
     end
 
-    local cval = clone(val)
+    local cval, err = clone(val)
     if cval == nil then
-        return false, errorf('cannot save %q value into session', type(val))
+        return false,
+               errorf('cannot save %q value into session', type(val), err)
     end
     self.data[key] = cval
     return true
