@@ -16,7 +16,7 @@ dependencies = {
     "error >= 0.14.0",
     "lauxhlib >= 0.6.1",
     "metamodule >= 0.5.0",
-    "string-random >= 0.2.0",
+    "string-random >= 0.3.0",
     "time-clock >= 0.4.1",
 }
 build = {
