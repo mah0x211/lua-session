@@ -86,6 +86,35 @@ function testcase.set_get()
     assert.match(err, 'key must be string with pattern "^%a[%w_]*$"')
 end
 
+function testcase.set_get_flash()
+    local m = assert(new_session())
+    local s = m:create()
+
+    -- test that set a flash value
+    local ok, err = s:set_flash('foo', {
+        bar = {
+            'baz',
+        },
+    })
+    assert.is_nil(err)
+    assert.is_true(ok)
+
+    -- test that get a value
+    assert.equal(s:get_flash('foo'), {
+        bar = {
+            'baz',
+        },
+    })
+
+    -- test that returns nil if after get the flash value
+    assert.is_nil(s:get_flash('foo'))
+
+    -- test that set a value with nil to delete it
+    assert(s:set_flash('foo', 'foo-value'))
+    assert(s:set_flash('foo'))
+    assert.is_nil(s:get_flash('foo'))
+end
+
 function testcase.getall()
     local m = assert(new_session())
     local s = m:create()
@@ -104,6 +133,24 @@ function testcase.getall()
     local all = s:getall()
     all.foo = 'baz'
     assert.equal(s:get('foo'), 'baz')
+end
+
+function testcase.getall_flash()
+    local m = assert(new_session())
+    local s = m:create()
+    assert(s:set_flash('a', 1))
+    assert(s:set_flash('b', 'test'))
+    assert(s:set_flash('c', true))
+
+    -- test that get all values
+    assert.equal(s:getall_flash(), {
+        a = 1,
+        b = 'test',
+        c = true,
+    })
+
+    -- test that getall_flash() returns a empty table after get the flash value
+    assert.equal(s:getall_flash(), {})
 end
 
 function testcase.get_copy()
@@ -197,6 +244,7 @@ function testcase.save()
             'baz',
         },
     }))
+    assert(s:set_flash('hello', 'world'))
 
     -- test that save session data into the store via manager object and return baked cookie
     local bcookie, err, timeout = s:save()
@@ -217,10 +265,15 @@ function testcase.save()
         value = sid,
     })
     assert.equal(decode_json(data), {
-        foo = {
-            bar = {
-                'baz',
+        data = {
+            foo = {
+                bar = {
+                    'baz',
+                },
             },
+        },
+        flash = {
+            hello = 'world',
         },
     })
 
@@ -304,11 +357,14 @@ function testcase.rename()
     -- verify session data is renamed
     assert.is_nil(store.values[oldid])
     assert.equal(decode_json(store.values[s:getid()]), {
-        foo = {
-            bar = {
-                'baz',
+        data = {
+            foo = {
+                bar = {
+                    'baz',
+                },
             },
         },
+        flash = {},
     })
 
     -- test that returns error message

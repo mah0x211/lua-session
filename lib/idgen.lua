@@ -31,6 +31,7 @@ local CLOCK_REALTIME = require('time.clock').CLOCK_REALTIME
 --- The id is composed of the crockford's base32 encoded current time in
 --- milliseconds and a random string with 6 characters of alphanumeric.
 --- @return string id
+--- @return any err
 local function idgen()
     local msec, err = getmsec(CLOCK_REALTIME)
     if not msec then
