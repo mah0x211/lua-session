@@ -144,7 +144,6 @@ function testcase.create()
     local err = assert.throws(function()
         m:create()
     end)
-    print(err)
     assert.match(err, 'idgen() did not return a non-empty string')
 end
 
