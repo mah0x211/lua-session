@@ -64,11 +64,11 @@ function testcase.new()
     })
     assert.re_match(err, 'invalid cfg.store')
 
-    -- test that throw error if idgen is not a callable
+    -- test that throw error if idgen is not a function
     err = assert.throws(new_session, {
         idgen = 1,
     })
-    assert.re_match(err, 'cfg.idgen .+ must be callable')
+    assert.re_match(err, 'cfg.idgen .+ must be function')
 
     -- test that throw error if idgen does not return a non-empty string
     err = assert.throws(new_session, {
@@ -76,7 +76,7 @@ function testcase.new()
             return ''
         end,
     })
-    assert.match(err, 'idgen() must returns a non-empty string')
+    assert.match(err, 'idgen() did not return a non-empty string')
 end
 
 function testcase.bake_cookie()
@@ -136,6 +136,16 @@ function testcase.create()
     local s = m:create()
     assert.re_match(s, '^session.Session: ')
     assert.equal(s.id, 'test-id')
+
+    -- test that throw error if idgen() returns nil
+    m.idgen = function()
+        return nil, 'test error'
+    end
+    local err = assert.throws(function()
+        m:create()
+    end)
+    print(err)
+    assert.match(err, 'idgen() did not return a non-empty string')
 end
 
 function testcase.save()
