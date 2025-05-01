@@ -1,6 +1,10 @@
 lua-session
 =========
 
+[![test](https://github.com/mah0x211/lua-session/actions/workflows/test.yml/badge.svg)](https://github.com/mah0x211/lua-session/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/mah0x211/lua-session/branch/master/graph/badge.svg)](https://codecov.io/gh/mah0x211/lua-session)
+
+
 session module.
 
 
