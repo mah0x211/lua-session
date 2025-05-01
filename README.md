@@ -255,6 +255,45 @@ delete the session data associated with specified key.
 - `val:any`: value that was removed.
 
 
+## ok, err = Session:set_flash( key, val )
+
+set the flash data with specified key. if the key is already exists, it will be overwritten.  
+flash data is removed from the session after being retrieved by `get_flash()` or `getall_flash()`.
+
+**Parameters**
+
+- `key:string`: key.
+- `val:any`: value that must be a `nil`, `string`, `number` or `table` value. a `table` value will be copied.
+
+**Returns**
+
+- `ok:boolean`: `true` on success, or `false` on failure.
+- `err:any`: an error message.
+
+
+## val = Session:get_flash( key )
+
+get the flash data associated with specified key.  
+the retrieved data will be removed from the session.
+
+**Parameters**
+
+- `key:string`: key.
+
+**Returns**
+
+- `val:any`: value.
+
+
+## vals = Session:getall_flash()
+
+get all flash data and remove them from the session.
+
+**Returns**
+
+- `vals:table`: a table that contains all flash data.
+
+
 ## cookie, err, timeout = Session:save()
 
 save the session data to the session store and return the session cookie.
@@ -280,6 +319,8 @@ rename the session id and return the new session cookie that includes the new se
 ## cookie, err, timeout = Session:destroy()
 
 destroy the session data from the session store and return the session cookie that can be used to delete the session cookie.
+
+
 
 
 ---

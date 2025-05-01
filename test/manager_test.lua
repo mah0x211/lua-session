@@ -246,8 +246,10 @@ function testcase.fetch()
     local a = math.random()
     local b = math.random()
     assert(m:save('test', {
-        a = a,
-        b = b,
+        data = {
+            a = a,
+            b = b,
+        },
     }))
 
     -- test that fetch session
@@ -325,8 +327,10 @@ function testcase.rename()
     local a = math.random()
     local b = math.random()
     assert(m:save('test', {
-        a = a,
-        b = b,
+        data = {
+            a = a,
+            b = b,
+        },
     }))
 
     -- test that rename session-id

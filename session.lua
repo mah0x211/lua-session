@@ -57,19 +57,26 @@ end
 --- @class session.Session
 --- @field private id string
 --- @field private data table<string, any>
+--- @field private falsh table<string, any>
 --- @field private manager session.Manager
 local Session = {}
 
 --- init
 --- @param manager session.Manager
 --- @param id string
---- @param data table<string, any>?
-function Session:init(manager, id, data)
+--- @param payload table<string, any>?
+function Session:init(manager, id, payload)
     self.manager = manager
     assert(is_str(id) and #id > 0, 'id must be a non-empty string')
     self.id = id
-    assert(data == nil or is_table(data), 'data must be nil or table')
-    self.data = data or {}
+    self.data = {}
+    self.flash = {}
+    if payload ~= nil then
+        assert(is_table(payload), 'payload must be nil or table')
+        self.data = is_table(payload.data) and payload.data or {}
+        self.flash = is_table(payload.flash) and payload.flash or {}
+    end
+
     return self
 end
 
@@ -142,18 +149,19 @@ end
 -- VALID_KEY_PATTERN allows only this pattern of string to be used as a key.
 local VALID_KEY_PATTERN = '^%a[%w_]*$'
 
---- set set a cloned value associated with the key into the session.
+--- set_value sets a cloned value associated with the key into the table.
+--- @param tbl table
 --- @param key string
 --- @param val any
 --- @return boolean ok
 --- @return any err
-function Session:set(key, val)
+local function set_value(tbl, key, val)
     if not is_str(key) or not find(key, VALID_KEY_PATTERN) then
         fatalf(2, 'key must be string with pattern %q', VALID_KEY_PATTERN)
     end
 
     if val == nil then
-        self.data[key] = nil
+        tbl[key] = nil
         return true
     end
 
@@ -162,8 +170,26 @@ function Session:set(key, val)
         return false,
                errorf('cannot save %q value into session', type(val), err)
     end
-    self.data[key] = cval
+    tbl[key] = cval
     return true
+end
+
+--- set set a cloned value associated with the key into the session.
+--- @param key string
+--- @param val any
+--- @return boolean ok
+--- @return any err
+function Session:set(key, val)
+    return set_value(self.data, key, val)
+end
+
+--- set_flash set a cloned value associated with the key into the session.
+--- @param key string
+--- @param val any
+--- @return boolean ok
+--- @return any err
+function Session:set_flash(key, val)
+    return set_value(self.flash, key, val)
 end
 
 --- get returns a value associated with the key from the session.
@@ -173,10 +199,29 @@ function Session:get(key)
     return self.data[key]
 end
 
+--- get_flash deletes a value associated with the key from the flash data
+--- @param key string
+--- @return any
+function Session:get_flash(key)
+    local val = self.flash[key]
+    if val then
+        -- delete value after get it
+        self.flash[key] = nil
+    end
+    return val
+end
+
 --- getall returns all values associated with the session.
 --- @return table<string, any>
 function Session:getall()
     return self.data
+end
+
+function Session:getall_flash()
+    local flash = self.flash
+    -- delete flash data after get it
+    self.flash = {}
+    return flash
 end
 
 --- get_copy returns a cloned value associated with the key from the session.
@@ -210,7 +255,10 @@ end
 --- @return any err
 --- @return boolean? timeout
 function Session:save()
-    local ok, err, timeout = self.manager:save(self.id, self.data)
+    local ok, err, timeout = self.manager:save(self.id, {
+        data = self.data,
+        flash = self.flash,
+    })
     if ok then
         return self.manager:bake_cookie(self.id)
     end
@@ -315,15 +363,16 @@ function Manager:init(cfg)
     end
 
     -- verify idgen function
-    if cfg.idgen == nil then
-        self.idgen = default_idgen
-    elseif not is_callable(cfg.idgen) then
-        -- it must be a function and returns a non-empty string-id
-        fatalf(2, 'cfg.idgen %q must be callable', type(cfg.idgen))
-    else
-        local id = cfg.idgen()
+    self.idgen = default_idgen
+    if cfg.idgen ~= nil then
+        if not is_callable(cfg.idgen) then
+            -- it must be a function and returns a non-empty string-id
+            fatalf(2, 'cfg.idgen %q must be callable', type(cfg.idgen))
+        end
+        -- confirm idgen function returns a non-empty string-id
+        local id, err = cfg.idgen()
         if not is_str(id) or #id == 0 then
-            fatalf(2, 'cfg.idgen() must returns a non-empty string-id')
+            fatalf(2, 'cfg.idgen() must returns a non-empty string-id', err)
         end
         self.idgen = cfg.idgen
     end
