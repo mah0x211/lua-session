@@ -30,7 +30,7 @@ local concat = table.concat
 local is_str = require('lauxhlib.is').str
 local is_table = require('lauxhlib.is').table
 local is_uint = require('lauxhlib.is').uint
-local is_callable = require('lauxhlib.is').callable
+local is_func = require('lauxhlib.is').func
 local errorf = require('error').format
 local fatalf = require('error').fatalf
 local default_idgen = require('session.idgen')
@@ -365,19 +365,35 @@ function Manager:init(cfg)
     -- verify idgen function
     self.idgen = default_idgen
     if cfg.idgen ~= nil then
-        if not is_callable(cfg.idgen) then
+        if not is_func(cfg.idgen) then
             -- it must be a function and returns a non-empty string-id
-            fatalf(2, 'cfg.idgen %q must be callable', type(cfg.idgen))
+            fatalf(2, 'cfg.idgen %q must be function', type(cfg.idgen))
         end
         -- confirm idgen function returns a non-empty string-id
         local id, err = cfg.idgen()
         if not is_str(id) or #id == 0 then
-            fatalf(2, 'cfg.idgen() must returns a non-empty string-id', err)
+            err = errorf('cfg.idgen() did not return a non-empty string %q', id,
+                         err)
+            fatalf(2, err)
         end
         self.idgen = cfg.idgen
     end
 
     return self
+end
+
+--- genid generates a new session id.
+--- this function will throw an error if the idgen function does not return a
+--- non-empty string-id.
+--- @private
+--- @return string id
+function Manager:genid()
+    local id, err = self.idgen()
+    if not is_str(id) or #id == 0 then
+        err = errorf('idgen() did not return a non-empty string %q', id, err)
+        fatalf(2, err)
+    end
+    return id
 end
 
 --- bake_cookie
@@ -399,7 +415,7 @@ end
 --- create creates a new session.
 --- @return session.Session
 function Manager:create()
-    local id = self.idgen()
+    local id = self:genid()
     return Session(self, id, {})
 end
 
@@ -453,7 +469,7 @@ function Manager:rename(sid)
         fatalf(2, 'sid %q must be string', type(sid))
     end
 
-    local newsid = self.idgen()
+    local newsid = self:genid()
     local ok, err, timeout = self.cache:rename(sid, newsid)
     if ok then
         return newsid
