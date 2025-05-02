@@ -134,6 +134,14 @@ function Cookie:set_config(attr, val)
         fatalf(2, '%q attribute value must be %s (got %s)', attr, type(defval),
                type(val))
     end
+
+    -- try to create a new cookie with the new attribute to verify the value
+    local cfg = self:get_config()
+    --- @diagnostic disable-next-line
+    cfg[attr] = val
+    new_cookie(cfg.name, cfg)
+
+    -- set the new attribute value
     --- @diagnostic disable-next-line
     self[attr] = val
 end
