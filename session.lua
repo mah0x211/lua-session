@@ -339,7 +339,6 @@ end
 
 --- @class session.Manager
 --- @field protected cookie session.cookie
---- @field private ttl integer session time-to-live.
 --- @field private idgen fun():(id: string)
 --- @field private cache cache
 local Manager = {}
