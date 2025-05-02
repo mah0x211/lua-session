@@ -55,6 +55,7 @@ local function ret_error_result(res, err, timeout, errfmt, ...)
 end
 
 --- @class session.Session
+--- @field cookie session.cookie
 --- @field private id string
 --- @field private data table<string, any>
 --- @field private falsh table<string, any>
@@ -65,10 +66,13 @@ local Session = {}
 --- @param manager session.Manager
 --- @param id string
 --- @param payload table<string, any>?
-function Session:init(manager, id, payload)
+--- @param cookie_cfg session.cookie.config?
+--- @return session.Session
+function Session:init(manager, id, payload, cookie_cfg)
     self.manager = manager
     assert(is_str(id) and #id > 0, 'id must be a non-empty string')
     self.id = id
+    self.cookie = new_session_cookie(cookie_cfg)
     self.data = {}
     self.flash = {}
     if payload ~= nil then
@@ -258,9 +262,9 @@ function Session:save()
     local ok, err, timeout = self.manager:save(self.id, {
         data = self.data,
         flash = self.flash,
-    })
+    }, self.cookie.maxage)
     if ok then
-        return self.manager:bake_cookie(self.id)
+        return self.cookie:bake(self.id)
     end
     return ret_error_result(nil, err, timeout, 'failed to save session')
 end
@@ -274,7 +278,7 @@ function Session:rename()
     if newid ~= nil then
         assert(is_str(newid), 'store:rename() must return string')
         self.id = newid
-        return self.manager:bake_cookie(newid)
+        return self.cookie:bake(self.id)
     end
     return ret_error_result(nil, err, timeout, 'failed to rename session-id')
 end
@@ -287,7 +291,7 @@ function Session:destroy()
     local ok, err, timeout = self.manager:destroy(self.id)
     if ok then
         self.data = {}
-        return self.manager:bake_void_cookie()
+        return self.cookie:bake_void()
     end
     return ret_error_result(nil, err, timeout, 'failed to destroy session')
 end
@@ -396,43 +400,28 @@ function Manager:genid()
     return id
 end
 
---- bake_cookie
---- @param sid string session id.
---- @return string cookie
-function Manager:bake_cookie(sid)
-    if not is_str(sid) then
-        fatalf(2, 'sid %q must be string', type(sid))
-    end
-    return self.cookie:bake(sid)
-end
-
---- bake_void_cookie
---- @return string cookie
-function Manager:bake_void_cookie()
-    return self.cookie:bake_void()
-end
-
 --- create creates a new session.
 --- @return session.Session
 function Manager:create()
     local id = self:genid()
-    return Session(self, id, {})
+    return Session(self, id, {}, self.cookie:get_config())
 end
 
 --- save saves the session data into the store.
 --- @param sid string session id.
 --- @param data any session data.
+--- @param ttl integer? session time-to-live.
 --- @return boolean ok
 --- @return any err
 --- @return boolean? timeout
-function Manager:save(sid, data)
+function Manager:save(sid, data, ttl)
     if not is_str(sid) then
         fatalf(2, 'sid must be string')
     elseif not is_table(data) then
         fatalf(2, 'data must be table')
     end
 
-    local ok, err, timeout = self.cache:set(sid, data)
+    local ok, err, timeout = self.cache:set(sid, data, ttl)
     if ok then
         return true
     end
@@ -454,7 +443,7 @@ function Manager:fetch(sid)
         if not is_table(data) then
             fatalf(2, 'acquired data is corrupted: data type is not table')
         end
-        return Session(self, sid, data)
+        return Session(self, sid, data, self.cookie:get_config())
     end
     return ret_error_result(nil, err, timeout, 'failed to fetch a data')
 end

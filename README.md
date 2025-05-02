@@ -51,28 +51,6 @@ print(m) -- session.Manager: 0x6000030de700
 
 the following methods are available in the `session.Manager` object.
 
-## cookie = Manager:bake_cookie( sid )
-
-bake the session cookie with specified session id.
-
-**Parameters**
-
-- `sid:string`: session id.
-
-**Returns**
-
-- `cookie:string`: cookie string that can be set to the `Set-Cookie` header.
-
-
-## cookie = Manager:bake_void_cookie()
-
-bake the void session cookie that cookie value is specified to `'void'`.  
-this cookie can be used to delete the session cookie.
-
-**Returns**
-
-- `cookie:string`: cookie string that can be set to the `Set-Cookie` header.
-
 
 ## s = Manager:create()
 
@@ -92,7 +70,7 @@ print(s) -- session.Session: 0x6000030de700
 ```
 
 
-## ok, err, timeout = Manager:save( sid, data )
+## ok, err, timeout = Manager:save( sid, data [, ttl] )
 
 save the session data with specified session id.
 
@@ -100,6 +78,7 @@ save the session data with specified session id.
 
 - `sid:string`: session id.
 - `data:table`: session data.
+- `ttl:integer`: time-to-live seconds. (default `session.cookie.config.maxage` that means no expiration)
 
 **Returns**
 
@@ -108,7 +87,7 @@ save the session data with specified session id.
 - `timeout:boolean`: `true` if the data saving operation timed out.
 
 
-## ok, err, timeout = Manager:fetch( sid )
+## s, err, timeout = Manager:fetch( sid )
 
 fetch the session data associated with specified session id.
 
@@ -118,7 +97,7 @@ fetch the session data associated with specified session id.
 
 **Returns**
 
-- `ok:boolean`: `true` on success, or `false` on failure.
+- `s:session.Session`: a session object.
 - `err:any`: an error message.
 - `timeout:boolean`: `true` if the data retrieval operation timed out.
 
