@@ -90,6 +90,103 @@ function testcase.new()
     assert.re_match(err, 'samesite must be "strict", "lax" or "none"')
 end
 
+function testcase.get_config()
+    -- test that get cookie configuration
+    local c = new_cookie({
+        name = 'test',
+        path = '/',
+        secure = true,
+        httponly = true,
+        samesite = 'strict',
+        maxage = 3600,
+    })
+    assert.equal(c:get_config('name'), 'test')
+    assert.equal(c:get_config('path'), '/')
+    assert.equal(c:get_config('secure'), true)
+    assert.equal(c:get_config('httponly'), true)
+    assert.equal(c:get_config('samesite'), 'strict')
+    assert.equal(c:get_config('maxage'), 3600)
+
+    -- test that return all cookie attributes
+    local cfg = c:get_config()
+    assert.equal(cfg, {
+        name = 'test',
+        path = '/',
+        secure = true,
+        httponly = true,
+        samesite = 'strict',
+        maxage = 3600,
+    })
+
+    -- test that return nil if key is not valid
+    assert.is_nil(c:get_config('invalid'))
+end
+
+function testcase.set_config()
+    -- test that set cookie configuration
+    local c = new_cookie()
+    c:set_config('name', 'test')
+    assert.equal(c.name, 'test')
+
+    c:set_config('path', '/')
+    assert.equal(c.path, '/')
+
+    c:set_config('secure', true)
+    assert.equal(c.secure, true)
+
+    c:set_config('httponly', true)
+    assert.equal(c.httponly, true)
+
+    c:set_config('samesite', 'strict')
+    assert.equal(c.samesite, 'strict')
+
+    c:set_config('maxage', 3600)
+    assert.equal(c.maxage, 3600)
+
+    -- test that set default attribute if value is nil
+    c:set_config('name')
+    assert.equal(c.name, 'sid')
+
+    -- test that throw error if key is unsupported
+    local err = assert.throws(c.set_config, c, 'invalid', 'test')
+    assert.re_match(err, 'unsupported cookie attribute: "invalid"')
+
+    -- test that throw error if key is nil
+    err = assert.throws(c.set_config, c, nil, 'test')
+    assert.re_match(err, 'attr must be string')
+
+    -- test that throw error if value type is invalid
+    for k, a in pairs({
+        name = {
+            val = 1,
+            expect = '"name" attribute value must be string',
+        },
+        path = {
+            val = 1,
+            expect = '"path" attribute value must be string',
+        },
+        secure = {
+            val = 1,
+            expect = '"secure" attribute value must be boolean',
+        },
+        httponly = {
+            val = 1,
+            expect = '"httponly" attribute value must be boolean',
+        },
+        samesite = {
+            val = 'foo',
+            expect = '"samesite" attribute value must be "strict", "lax" or "none"',
+        },
+        maxage = {
+            val = 'foo',
+            expect = '"maxage" attribute value must be integer',
+        },
+    }) do
+        err = assert.throws(c.set_config, c, k, a.val)
+        assert.re_match(err, a.expect)
+    end
+end
+
 function testcase.bake()
     -- test that bake cookie with default configuration
     local c = new_cookie()

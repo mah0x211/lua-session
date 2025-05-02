@@ -3,7 +3,6 @@ local testcase = require('testcase')
 local assert = require('assert')
 local decode_json = require('yyjson').decode
 local new_session = require('session').new
-local parse_baked_cookie = require('cookie').parse_baked_cookie
 
 function testcase.new()
     -- test that create new session manager
@@ -77,52 +76,6 @@ function testcase.new()
         end,
     })
     assert.match(err, 'idgen() did not return a non-empty string')
-end
-
-function testcase.bake_cookie()
-    local m = assert(new_session())
-
-    -- test that return a baked cookie
-    local bcookie, err, timeout = m:bake_cookie('test-id')
-    assert.is_nil(err)
-    assert.is_nil(timeout)
-    -- verify baked cookie
-    assert.is_string(bcookie)
-    local cookie = assert(parse_baked_cookie(bcookie))
-    assert.contains(cookie, {
-        httponly = true,
-        maxage = 1800,
-        name = 'sid',
-        path = '/',
-        samesite = 'lax',
-        secure = true,
-        value = 'test-id',
-    })
-
-    -- test that throw error if session-id is not a string
-    err = assert.throws(m.bake_cookie, m, {})
-    assert.re_match(err, 'sid .+ must be string')
-end
-
-function testcase.bake_void_cookie()
-    local m = assert(new_session())
-
-    -- test that return a baked cookie
-    local bcookie, err, timeout = m:bake_void_cookie()
-    assert.is_nil(err)
-    assert.is_nil(timeout)
-    -- verify baked void cookie
-    assert.is_string(bcookie)
-    local cookie = assert(parse_baked_cookie(bcookie))
-    assert.contains(cookie, {
-        httponly = true,
-        maxage = -1800,
-        name = 'sid',
-        path = '/',
-        samesite = 'lax',
-        secure = true,
-        value = 'void',
-    })
 end
 
 function testcase.create()

@@ -23,6 +23,7 @@
 local pairs = pairs
 local pcall = pcall
 local is_str = require('lauxhlib.is').str
+local is_int = require('lauxhlib.is').int
 local is_table = require('lauxhlib.is').table
 local fatalf = require('error').fatalf
 local new_cookie = require('cookie').new
@@ -84,6 +85,57 @@ local Cookie = {}
 function Cookie:init(cfg)
     parse_config(self, cfg)
     return self
+end
+
+--- get_config get cookie configuration
+--- @param attr string?
+--- @return session.cookie.config
+function Cookie:get_config(attr)
+    if attr ~= nil then
+        return DEFAULT_COOKIE_ATTR[attr] and self[attr] or nil
+    end
+
+    -- return all cookie attributes
+    return {
+        name = self.name,
+        path = self.path,
+        maxage = self.maxage,
+        secure = self.secure,
+        httponly = self.httponly,
+        samesite = self.samesite,
+    }
+end
+
+--- set_config set cookie configuration
+--- @param attr string
+--- @param val any
+function Cookie:set_config(attr, val)
+    local defval = DEFAULT_COOKIE_ATTR[attr]
+    if attr == nil then
+        fatalf(2, 'attr must be string')
+    elseif not defval then
+        fatalf(2, 'unsupported cookie attribute: %q', attr)
+    elseif val == nil then
+        -- set default value
+        self[attr] = defval
+        return
+    elseif attr == 'maxage' then
+        if not is_int(val) then
+            fatalf(2, '%q attribute value must be integer (got %s)', attr,
+                   type(val))
+        end
+    elseif attr == 'samesite' then
+        if not is_str(val) or val ~= 'none' and val ~= 'lax' and val ~= 'strict' then
+            fatalf(2,
+                   '%q attribute value must be "strict", "lax" or "none" (got %s)',
+                   attr, is_str(val) and ('%q'):format(val) or type(val))
+        end
+    elseif type(val) ~= type(defval) then
+        fatalf(2, '%q attribute value must be %s (got %s)', attr, type(defval),
+               type(val))
+    end
+    --- @diagnostic disable-next-line
+    self[attr] = val
 end
 
 --- bake bake a cookie
