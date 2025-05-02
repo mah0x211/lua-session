@@ -90,6 +90,38 @@ function testcase.new()
     assert.re_match(err, 'samesite must be "strict", "lax" or "none"')
 end
 
+function testcase.get_config()
+    -- test that get cookie configuration
+    local c = new_cookie({
+        name = 'test',
+        path = '/',
+        secure = true,
+        httponly = true,
+        samesite = 'strict',
+        maxage = 3600,
+    })
+    assert.equal(c:get_config('name'), 'test')
+    assert.equal(c:get_config('path'), '/')
+    assert.equal(c:get_config('secure'), true)
+    assert.equal(c:get_config('httponly'), true)
+    assert.equal(c:get_config('samesite'), 'strict')
+    assert.equal(c:get_config('maxage'), 3600)
+
+    -- test that return all cookie attributes
+    local cfg = c:get_config()
+    assert.equal(cfg, {
+        name = 'test',
+        path = '/',
+        secure = true,
+        httponly = true,
+        samesite = 'strict',
+        maxage = 3600,
+    })
+
+    -- test that return nil if key is not valid
+    assert.is_nil(c:get_config('invalid'))
+end
+
 function testcase.bake()
     -- test that bake cookie with default configuration
     local c = new_cookie()

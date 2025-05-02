@@ -86,6 +86,25 @@ function Cookie:init(cfg)
     return self
 end
 
+--- get_config get cookie configuration
+--- @param attr string?
+--- @return session.cookie.config
+function Cookie:get_config(attr)
+    if attr ~= nil then
+        return DEFAULT_COOKIE_ATTR[attr] and self[attr] or nil
+    end
+
+    -- return all cookie attributes
+    return {
+        name = self.name,
+        path = self.path,
+        maxage = self.maxage,
+        secure = self.secure,
+        httponly = self.httponly,
+        samesite = self.samesite,
+    }
+end
+
 --- bake bake a cookie
 --- @param val string
 --- @return string cookie
