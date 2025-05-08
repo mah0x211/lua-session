@@ -304,6 +304,34 @@ rename the session id and return the new session cookie that includes the new se
 destroy the session data from the session store and return the session cookie that can be used to delete the session cookie.
 
 
+# session.cookie
+
+`session.Session` object has a `cookie` property that is a `session.cookie` object. the following methods are available in the `session.cookie` object.
+
+
+## cookie = Cookie:get_config( [attr] )
+
+get the cookie configuration associated with `attr` attribute. if the `attr` is not specified, it will return the whole cookie configuration.
+
+**Parameters**
+
+- `attr:string`: cookie attribute name.
+
+**Returns**
+
+- `val:any`: cookie attribute value.
+
+
+## Cookie:set_config( attr [, val] )
+
+set the cookie configuration associated with `attr` attribute.  
+if invalid attribute is specified, it will throw an error.
+
+**Parameters**
+
+- `attr:string|table`: cookie attribute name or a `table` that contains cookie attributes. if `attr` is a `table`, `val` must not be specified.
+- `val:any`: cookie attribute value. if it is `nil`, it will be set to default value.
+
 
 
 ---

@@ -23,7 +23,6 @@
 local pairs = pairs
 local pcall = pcall
 local is_str = require('lauxhlib.is').str
-local is_int = require('lauxhlib.is').int
 local is_table = require('lauxhlib.is').table
 local fatalf = require('error').fatalf
 local new_cookie = require('cookie').new
@@ -49,16 +48,18 @@ local DEFAULT_COOKIE_ATTR = {
 }
 
 --- parse_config parse cookie configuration and copy to dest
---- @param dest table
---- @param cfg session.cookie.config
-local function parse_config(dest, cfg)
+--- @param cfg table<string, any>
+--- @param default session.cookie.config
+--- @return session.cookie.config
+local function parse_config(cfg, default)
+    local dest = {}
     cfg = cfg == nil and {} or cfg
     if not is_table(cfg) then
         fatalf(2, 'cfg must be table')
     end
 
     -- verify config
-    for k, defval in pairs(DEFAULT_COOKIE_ATTR) do
+    for k, defval in pairs(default) do
         if cfg[k] == nil then
             cfg[k] = defval
         end
@@ -68,82 +69,63 @@ local function parse_config(dest, cfg)
     if not ok then
         fatalf(2, 'invalid cookie configuration: %s', err)
     end
+    return dest
 end
 
 --- @class session.cookie
---- @field name string
---- @field path string
---- @field maxage integer default 1800 sec (30 min)
---- @field secure boolean
---- @field httponly boolean
---- @field samesite string 'none' | 'lax' | 'strict', default 'lax'
+--- @field cfg session.cookie.config
 local Cookie = {}
 
 --- init
 --- @param cfg session.cookie.config a cache field will be ignored.
 --- @return session.cookie
 function Cookie:init(cfg)
-    parse_config(self, cfg)
+    self.cfg = parse_config(cfg, DEFAULT_COOKIE_ATTR)
     return self
 end
 
 --- get_config get cookie configuration
 --- @param attr string?
---- @return session.cookie.config
+--- @return any
 function Cookie:get_config(attr)
     if attr ~= nil then
-        return DEFAULT_COOKIE_ATTR[attr] and self[attr] or nil
+        return DEFAULT_COOKIE_ATTR[attr] and self.cfg[attr] or nil
     end
 
     -- return all cookie attributes
     return {
-        name = self.name,
-        path = self.path,
-        maxage = self.maxage,
-        secure = self.secure,
-        httponly = self.httponly,
-        samesite = self.samesite,
+        name = self.cfg.name,
+        path = self.cfg.path,
+        maxage = self.cfg.maxage,
+        secure = self.cfg.secure,
+        httponly = self.cfg.httponly,
+        samesite = self.cfg.samesite,
     }
 end
 
 --- set_config set cookie configuration
---- @param attr string
+--- @param attr string|table
 --- @param val any
 function Cookie:set_config(attr, val)
-    local defval = DEFAULT_COOKIE_ATTR[attr]
     if attr == nil then
-        fatalf(2, 'attr must be string')
-    elseif not defval then
-        fatalf(2, 'unsupported cookie attribute: %q', attr)
-    elseif val == nil then
-        -- set default value
-        self[attr] = defval
-        return
-    elseif attr == 'maxage' then
-        if not is_int(val) then
-            fatalf(2, '%q attribute value must be integer (got %s)', attr,
-                   type(val))
+        fatalf(2, 'attr must be string or table')
+    elseif is_str(attr) then
+        local defval = DEFAULT_COOKIE_ATTR[attr]
+        if not defval then
+            fatalf(2, 'unsupported cookie attribute: %q', attr)
         end
-    elseif attr == 'samesite' then
-        if not is_str(val) or val ~= 'none' and val ~= 'lax' and val ~= 'strict' then
-            fatalf(2,
-                   '%q attribute value must be "strict", "lax" or "none" (got %s)',
-                   attr, is_str(val) and ('%q'):format(val) or type(val))
-        end
-    elseif type(val) ~= type(defval) then
-        fatalf(2, '%q attribute value must be %s (got %s)', attr, type(defval),
-               type(val))
+
+        val = {
+            [attr] = val or defval,
+        }
+    elseif not is_table(attr) then
+        fatalf(2, 'attr must be table<string, any>')
+    elseif val ~= nil then
+        fatalf(2, 'val must be nil if attr is table')
+    else
+        val = attr
     end
-
-    -- try to create a new cookie with the new attribute to verify the value
-    local cfg = self:get_config()
-    --- @diagnostic disable-next-line
-    cfg[attr] = val
-    new_cookie(cfg.name, cfg)
-
-    -- set the new attribute value
-    --- @diagnostic disable-next-line
-    self[attr] = val
+    self.cfg = parse_config(val, self:get_config())
 end
 
 --- bake bake a cookie
@@ -153,25 +135,20 @@ function Cookie:bake(val)
     if not is_str(val) then
         fatalf(2, 'val must be string')
     end
-    return bake_cookie(self.name, val, self)
+    return bake_cookie(self.cfg.name, val, self.cfg)
 end
 
 --- bake_void bake a expired cookie
 --- @return string cookie
 function Cookie:bake_void()
-    return bake_cookie(self.name, 'void', {
-        path = self.path,
-        secure = self.secure,
-        httponly = self.httponly,
-        samesite = self.samesite,
-        maxage = -self.maxage,
-    })
+    local cfg = self:get_config()
+    cfg.maxage = -cfg.maxage
+    return bake_cookie(self.cfg.name, 'void', cfg)
 end
 
 return {
     new = require('metamodule').new(Cookie),
     parse_cookies = require('cookie').parse_cookies,
     parse_baked_cookie = require('cookie').parse_baked_cookie,
-    parse_config = parse_config,
 }
 

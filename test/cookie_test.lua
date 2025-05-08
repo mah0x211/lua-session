@@ -2,45 +2,13 @@ require('luacov')
 local testcase = require('testcase')
 local assert = require('assert')
 local parse_baked_cookie = require('cookie').parse_baked_cookie
-local parse_config = require('session.cookie').parse_config
 local new_cookie = require('session.cookie').new
-
-function testcase.parse_config()
-    -- test that copy default configuration if config is nil
-    local c = {}
-    assert.not_throws(parse_config, c)
-    assert.equal(c, {
-        name = 'sid',
-        path = '/',
-        secure = true,
-        httponly = true,
-        samesite = 'lax',
-        maxage = 1800,
-    })
-
-    -- test that copy default configuration if a field is nil
-    assert.not_throws(parse_config, c, {
-        name = 'my-session-id',
-        secure = false,
-    })
-    assert.equal(c, {
-        name = 'my-session-id',
-        path = '/',
-        secure = false,
-        httponly = true,
-        samesite = 'lax',
-        maxage = 1800,
-    })
-
-    -- test that throw error if config is not table
-    local err = assert.throws(parse_config, c, 1)
-    assert.re_match(err, 'cfg must be table')
-end
 
 function testcase.new()
     -- test that create new cookie instance with default configuration
     local c = new_cookie()
-    assert.contains(c, {
+    assert.re_match(c, '^session.cookie: ')
+    assert.contains(c.cfg, {
         name = 'sid',
         path = '/',
         secure = true,
@@ -58,7 +26,7 @@ function testcase.new()
         samesite = 'strict',
         maxage = 3600,
     })
-    assert.contains(c, {
+    assert.contains(c.cfg, {
         name = 'test',
         path = '/',
         secure = true,
@@ -125,61 +93,82 @@ end
 function testcase.set_config()
     -- test that set cookie configuration
     local c = new_cookie()
-    c:set_config('name', 'test')
-    assert.equal(c.name, 'test')
+    for k, v in pairs({
+        name = 'test',
+        path = '/',
+        secure = true,
+        httponly = true,
+        samesite = 'strict',
+        maxage = 3600,
+    }) do
+        c:set_config(k, v)
+        assert.equal(c.cfg[k], v)
+    end
 
-    c:set_config('path', '/')
-    assert.equal(c.path, '/')
-
-    c:set_config('secure', true)
-    assert.equal(c.secure, true)
-
-    c:set_config('httponly', true)
-    assert.equal(c.httponly, true)
-
-    c:set_config('samesite', 'strict')
-    assert.equal(c.samesite, 'strict')
-
-    c:set_config('maxage', 3600)
-    assert.equal(c.maxage, 3600)
-
-    -- test that set default attribute if value is nil
+    -- test that set default configuration
     c:set_config('name')
-    assert.equal(c.name, 'sid')
+    assert.equal(c.cfg.name, 'sid')
+
+    -- test that set configuration with table value
+    c:set_config({
+        name = 'test2',
+        path = '/foo',
+        secure = false,
+        httponly = false,
+        maxage = 36,
+    })
+    assert.equal(c.cfg, {
+        name = 'test2',
+        path = '/foo',
+        secure = false,
+        httponly = false,
+        samesite = 'strict',
+        maxage = 36,
+    })
 
     -- test that throw error if key is unsupported
     local err = assert.throws(c.set_config, c, 'invalid', 'test')
     assert.re_match(err, 'unsupported cookie attribute: "invalid"')
 
     -- test that throw error if key is nil
-    err = assert.throws(c.set_config, c, nil, 'test')
-    assert.re_match(err, 'attr must be string')
+    err = assert.throws(c.set_config, c)
+    assert.re_match(err, 'attr must be string or table')
+
+    -- test that throw error if key is neither string nor table
+    err = assert.throws(c.set_config, c, 1)
+    assert.re_match(err, 'attr must be table')
+
+    -- test that throw error if key is table but value is not nil
+    err = assert.throws(c.set_config, c, {
+        name = 'test',
+    }, 1)
+    assert.re_match(err, 'val must be nil')
 
     -- test that throw error if value type is invalid
     for k, a in pairs({
         name = {
             val = 1,
-            expect = '"name" attribute value must be string',
+            expect = 'name must be valid cookie-name',
         },
         path = {
             val = 1,
-            expect = '"path" attribute value must be string',
+            expect = 'path must be string',
         },
         secure = {
             val = 1,
-            expect = '"secure" attribute value must be boolean',
+            expect = 'secure must be boolean',
         },
         httponly = {
             val = 1,
-            expect = '"httponly" attribute value must be boolean',
+            expect = 'httponly must be boolean',
         },
         samesite = {
             val = 'foo',
-            expect = '"samesite" attribute value must be "strict", "lax" or "none"',
+            expect = 'samesite must be "strict", "lax" or "none"',
         },
         maxage = {
             val = 'foo',
-            expect = '"maxage" attribute value must be integer',
+            expect = 'maxage must be integer',
         },
     }) do
         err = assert.throws(c.set_config, c, k, a.val)
