@@ -172,6 +172,5 @@ return {
     new = require('metamodule').new(Cookie),
     parse_cookies = require('cookie').parse_cookies,
     parse_baked_cookie = require('cookie').parse_baked_cookie,
-    parse_config = parse_config,
 }
 
