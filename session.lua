@@ -262,7 +262,7 @@ function Session:save()
     local ok, err, timeout = self.manager:save(self.id, {
         data = self.data,
         flash = self.flash,
-    }, self.cookie.maxage)
+    }, self.cookie:get_config('maxage'))
     if ok then
         return self.cookie:bake(self.id)
     end
@@ -360,7 +360,8 @@ function Manager:init(cfg)
     end
 
     -- create a cache store
-    ok, self.cache = pcall(new_store, cfg.store, self.cookie.maxage)
+    ok, self.cache = pcall(new_store, cfg.store,
+                           self.cookie:get_config('maxage'))
     if not ok then
         fatalf(2, 'invalid cfg.store', self.cache)
     end
