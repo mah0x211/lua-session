@@ -26,6 +26,7 @@ if invalid configuration is specified, it will throw an error.
 - `store:any`: session store that use with [lua-cache](https://github.com/mah0x211/lua-cache) module (default `nil`). please refer to the lua-cache module documentation for more information.
 - `cookie:session.cookie.config`: cookie configuration that can specify the following fields;
     - `name:string`: cookie name (default `sid`).
+    - `domain:string`: domain (default `nil`). Note that the empty string is treated as `nil`.
     - `path:string`: path (default `/`).
     - `secure:boolean`: secure flag. (default `true`)
     - `httponly:boolean`: http-only flag. (default `true`)
