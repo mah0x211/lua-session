@@ -112,19 +112,25 @@ function testcase.set_config()
     -- test that set configuration with table value
     c:set_config({
         name = 'test2',
+        domain = 'example.com',
         path = '/foo',
         secure = false,
         httponly = false,
         maxage = 36,
     })
-    assert.equal(c.cfg, {
+    assert.equal(c:get_config(), {
         name = 'test2',
+        domain = 'example.com',
         path = '/foo',
         secure = false,
         httponly = false,
         samesite = 'strict',
         maxage = 36,
     })
+
+    -- test that remove domain event it is empty string
+    c:set_config('domain', '  \t \t  \n')
+    assert.is_nil(c:get_config('domain'))
 
     -- test that throw error if key is unsupported
     local err = assert.throws(c.set_config, c, 'invalid', 'test')
