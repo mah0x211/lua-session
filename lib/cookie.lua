@@ -47,29 +47,33 @@ local DEFAULT_COOKIE_ATTR = {
     samesite = 'lax',
 }
 
---- parse_config parse cookie configuration and copy to dest
---- @param cfg table<string, any>
---- @param default session.cookie.config
+--- merge_config merge cookie configuration
+--- @param newcfg table<string, any>?
+--- @param oldcfg table<string, any>?
 --- @return session.cookie.config
-local function parse_config(cfg, default)
-    local dest = {}
-    cfg = cfg == nil and {} or cfg
-    if not is_table(cfg) then
-        fatalf(2, 'cfg must be table')
-    end
+local function merge_config(newcfg, oldcfg)
+    newcfg = newcfg == nil and {} or newcfg
+    assert(is_table(newcfg), 'newcfg must be table')
+    oldcfg = oldcfg == nil and {} or oldcfg
+    assert(is_table(oldcfg), 'oldcfg must be table')
 
     -- verify config
-    for k, defval in pairs(default) do
-        if cfg[k] == nil then
+    local cfg = {}
+    for k, defval in pairs(DEFAULT_COOKIE_ATTR) do
+        if newcfg[k] ~= nil then
+            cfg[k] = newcfg[k]
+        elseif oldcfg[k] ~= nil then
+            cfg[k] = oldcfg[k]
+        else
             cfg[k] = defval
         end
-        dest[k] = cfg[k]
     end
+
     local ok, err = pcall(new_cookie, cfg.name, cfg)
     if not ok then
         fatalf(2, 'invalid cookie configuration: %s', err)
     end
-    return dest
+    return cfg
 end
 
 --- @class session.cookie
@@ -80,7 +84,9 @@ local Cookie = {}
 --- @param cfg session.cookie.config a cache field will be ignored.
 --- @return session.cookie
 function Cookie:init(cfg)
-    self.cfg = parse_config(cfg, DEFAULT_COOKIE_ATTR)
+    cfg = cfg == nil and {} or cfg
+    assert(is_table(cfg), 'cfg must be table')
+    self.cfg = merge_config(cfg)
     return self
 end
 
@@ -125,7 +131,7 @@ function Cookie:set_config(attr, val)
     else
         val = attr
     end
-    self.cfg = parse_config(val, self:get_config())
+    self.cfg = merge_config(val, self:get_config())
 end
 
 --- bake bake a cookie
