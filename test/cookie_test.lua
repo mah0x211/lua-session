@@ -124,7 +124,7 @@ function testcase.set_config()
         path = '/foo',
         secure = false,
         httponly = false,
-        samesite = 'strict',
+        samesite = 'lax',
         maxage = 36,
     })
 
