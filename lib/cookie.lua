@@ -50,23 +50,18 @@ local DEFAULT_COOKIE_ATTR = {
     samesite = 'lax',
 }
 
---- merge_config merge cookie configuration
+--- parse_config parse cookie configuration
 --- @param newcfg table<string, any>?
---- @param oldcfg table<string, any>?
 --- @return session.cookie.config
-local function merge_config(newcfg, oldcfg)
+local function parse_config(newcfg)
     newcfg = newcfg == nil and {} or newcfg
     assert(is_table(newcfg), 'newcfg must be table')
-    oldcfg = oldcfg == nil and {} or oldcfg
-    assert(is_table(oldcfg), 'oldcfg must be table')
 
     -- verify config
     local cfg = {}
     for k, defval in pairs(DEFAULT_COOKIE_ATTR) do
         if newcfg[k] ~= nil then
             cfg[k] = newcfg[k]
-        elseif oldcfg[k] ~= nil then
-            cfg[k] = oldcfg[k]
         else
             cfg[k] = defval
         end
@@ -94,7 +89,7 @@ local Cookie = {}
 function Cookie:init(cfg)
     cfg = cfg == nil and {} or cfg
     assert(is_table(cfg), 'cfg must be table')
-    self.cfg = merge_config(cfg)
+    self.cfg = parse_config(cfg)
     return self
 end
 
@@ -140,7 +135,7 @@ function Cookie:set_config(attr, val)
     else
         val = attr
     end
-    self.cfg = merge_config(val, self:get_config())
+    self.cfg = parse_config(val)
 end
 
 --- bake bake a cookie
