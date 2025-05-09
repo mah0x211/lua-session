@@ -121,14 +121,31 @@ function Cookie:set_config(attr, val)
         fatalf(2, 'attr must be string or table')
     elseif is_str(attr) then
         local defval = DEFAULT_COOKIE_ATTR[attr]
-        if not defval then
+        if defval == nil then
             fatalf(2, 'unsupported cookie attribute: %q', attr)
         end
 
-        val = {
-            [attr] = val or defval,
-        }
-    elseif not is_table(attr) then
+        local oldval = self.cfg[attr]
+        local newval = val
+        if newval == nil then
+            newval = defval
+        end
+
+        if attr == 'domain' and find(newval, '^%s*$') then
+            self.cfg[attr] = nil
+        else
+            self.cfg[attr] = newval
+        end
+
+        local ok, err = pcall(new_cookie, self.cfg.name, self.cfg)
+        if not ok then
+            self.cfg[attr] = oldval
+            fatalf(2, 'invalid cookie configuration: %s', err)
+        end
+        return
+    end
+
+    if not is_table(attr) then
         fatalf(2, 'attr must be table<string, any>')
     elseif val ~= nil then
         fatalf(2, 'val must be nil if attr is table')
