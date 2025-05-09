@@ -22,6 +22,7 @@
 -- module
 local pairs = pairs
 local pcall = pcall
+local find = string.find
 local is_str = require('lauxhlib.is').str
 local is_table = require('lauxhlib.is').table
 local fatalf = require('error').fatalf
@@ -30,6 +31,7 @@ local bake_cookie = require('cookie').bake
 
 --- @class session.cookie.config
 --- @field name string session-cookie name.
+--- @field domain string session-cookie domain.
 --- @field path string session-cookie path.
 --- @field secure boolean session-cookie secure.
 --- @field httponly boolean session-cookie http-only.
@@ -40,6 +42,7 @@ local bake_cookie = require('cookie').bake
 --- session-cookie attributes
 local DEFAULT_COOKIE_ATTR = {
     name = 'sid',
+    domain = '',
     path = '/',
     maxage = 60 * 30,
     secure = true,
@@ -67,6 +70,11 @@ local function merge_config(newcfg, oldcfg)
         else
             cfg[k] = defval
         end
+    end
+
+    -- remove empty domain
+    if cfg.domain and find(cfg.domain, '^%s*$') then
+        cfg.domain = nil
     end
 
     local ok, err = pcall(new_cookie, cfg.name, cfg)
@@ -101,6 +109,7 @@ function Cookie:get_config(attr)
     -- return all cookie attributes
     return {
         name = self.cfg.name,
+        domain = self.cfg.domain,
         path = self.cfg.path,
         maxage = self.cfg.maxage,
         secure = self.cfg.secure,
