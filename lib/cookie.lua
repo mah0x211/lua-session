@@ -97,20 +97,23 @@ end
 --- @param attr string?
 --- @return any
 function Cookie:get_config(attr)
-    if attr ~= nil then
-        return DEFAULT_COOKIE_ATTR[attr] and self.cfg[attr] or nil
+    if attr == nil then
+        -- return all cookie attributes
+        return {
+            name = self.cfg.name,
+            domain = self.cfg.domain,
+            path = self.cfg.path,
+            maxage = self.cfg.maxage,
+            secure = self.cfg.secure,
+            httponly = self.cfg.httponly,
+            samesite = self.cfg.samesite,
+        }
     end
 
-    -- return all cookie attributes
-    return {
-        name = self.cfg.name,
-        domain = self.cfg.domain,
-        path = self.cfg.path,
-        maxage = self.cfg.maxage,
-        secure = self.cfg.secure,
-        httponly = self.cfg.httponly,
-        samesite = self.cfg.samesite,
-    }
+    if DEFAULT_COOKIE_ATTR[attr] ~= nil then
+        return self.cfg[attr]
+    end
+    -- ignore unsupported attribute
 end
 
 --- set_config set cookie configuration
