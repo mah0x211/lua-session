@@ -59,8 +59,17 @@ function testcase.new()
 end
 
 function testcase.get_config()
+    -- test that get cookie default configuration
+    local c = new_cookie()
+    assert.equal(c:get_config('name'), 'sid')
+    assert.equal(c:get_config('path'), '/')
+    assert.equal(c:get_config('secure'), true)
+    assert.equal(c:get_config('httponly'), true)
+    assert.equal(c:get_config('samesite'), 'lax')
+    assert.equal(c:get_config('maxage'), 1800)
+
     -- test that get cookie configuration
-    local c = new_cookie({
+    c = new_cookie({
         name = 'test',
         path = '/',
         secure = true,
