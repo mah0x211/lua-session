@@ -19,29 +19,57 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 -- THE SOFTWARE.
 --
--- modules
+local floor = math.floor
 local rep = string.rep
-local getmsec = require('time.clock').getmsec
-local randstr = require('string.random')
+local char = string.char
+local pack = string.pack
 local errorf = require('error').format
-local base32encode = require('session.base32').encode
+local base32encode = require('base32').encode
+local getmsec = require('time.clock').getmsec
 local CLOCK_REALTIME = require('time.clock').CLOCK_REALTIME
 
---- idgen returns a sortable string id.
---- The id is composed of the crockford's base32 encoded current time in
---- milliseconds and a random string with 6 characters of alphanumeric.
---- @return string id
---- @return any err
-local function idgen()
+--- Generate 0-padded crockford base32 encoded timestamp.
+local function get_timestamp()
     local msec, err = getmsec(CLOCK_REALTIME)
     if not msec then
         return nil, errorf('failed to get current time: %s', err)
     end
 
-    local ts = base32encode(msec)
+    -- convert msec to 6-byte big-endian byte string manually
+    local bytes = pack and pack('>I6', msec) or
+                      char(floor(msec / 0x10000000000) % 256,
+                           floor(msec / 0x100000000) % 256,
+                           floor(msec / 0x1000000) % 256,
+                           floor(msec / 0x10000) % 256,
+                           floor(msec / 0x100) % 256, msec % 256)
+
+    -- create 0 padded crockford base32 encoded timestamp
+    local ts = base32encode(bytes, 'crockford')
     local n = #ts
-    return (n < 10 and rep('0', 10 - n) or '') .. ts .. '_' ..
-               randstr(6, 'alnum')
+    ts = (n < 10 and rep('0', 10 - n) or '') .. ts
+    return ts
+end
+
+-- random string generator
+local randstr = require('string.random')
+
+--- generates a ULID-compatible ID
+--- @return string? id
+--- @return any err
+local function idgen()
+    local ts, err = get_timestamp()
+    if not ts then
+        return nil, errorf('failed to get current time: %s', err)
+    end
+
+    -- create crockford base32 encoded 16 characters random string
+    local s, _
+    s, _, err = randstr(16, 'base32crockford')
+    if not s then
+        return nil, errorf('failed to generate random bytes: %s', err)
+    end
+
+    return ts .. s
 end
 
 return idgen

@@ -9,8 +9,9 @@ function testcase.getid()
     local m = assert(new_session())
     local s = m:create()
 
-    -- test that get an id
-    assert.re_match(s:getid(), '^[0-9A-Z]+_[0-9a-zA-Z]+$')
+    -- test that get an ULID-compatible session-id
+    -- NOTE: crockford's base32 characters are 0-9 and A-Z excluding I, L, O, U
+    assert.re_match(s:getid(), '^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{26}$')
 end
 
 function testcase.set_get()
